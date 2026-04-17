@@ -26,9 +26,15 @@ You can type something like *"students with marks above 80"* and the system conv
 - top 3 students  
 - students with marks above 80  
 - cse students below age 21  
-- average marks  
+- average marks
 
-4. How to run it
+4. Query System Live Demo
+
+Currently runs locally. Deployment coming soon.
+
+This project lets you interact with a database using simple English...
+
+5. How to run it
 
 1. Set up the database:
 ```bash
