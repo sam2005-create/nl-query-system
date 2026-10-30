@@ -1,41 +1,45 @@
 # NL Query System
 
-This project lets you interact with a database using simple English instead of writing SQL queries manually.  
-You can type something like *"students with marks above 80"* and the system converts it into SQL and shows the result.
+Ask a database questions in plain English and get the answer back as a table. Type "cse students below age 21" and the app turns it into SQL, runs it on a SQLite database and shows you both the query and the result.
 
+Built with Python, Flask and SQLite, with a plain HTML/JS front end.
 
-1. What it can do
+## What you can ask
 
-- Understand basic natural language queries  
-- Convert them into SQL automatically  
-- Handle conditions like marks and age  
-- Show top students (e.g., top 3 students)  
-- Display results in a clean table format  
+The sample database has 12 students with a name, age, branch (cse, ece, mech) and marks.
 
-2. Built with
+| You type | SQL it runs |
+| --- | --- |
+| all students | `SELECT * FROM students` |
+| students with marks above 80 | `... WHERE marks > 80` |
+| cse students below age 21 | `... WHERE branch = 'cse' AND age < 21` |
+| top 3 cse students | `... WHERE branch = 'cse' ORDER BY marks DESC LIMIT 3` |
+| average marks of ece students | `SELECT ROUND(AVG(marks), 2) ... WHERE branch = 'ece'` |
+| how many students scored above 85 | `SELECT COUNT(*) ... WHERE marks > 85` |
 
-- Python  
-- Flask  
-- SQLite  
-- HTML/CSS  
+Filters work together, so you can mix a branch, a marks condition and an age condition in one question. It understands "above", "below", "more than", "less than", "over", "under", "older than" and "younger than".
 
-3. Example queries you can try
+## How it works
 
-- all students  
-- top students  
-- top 3 students  
-- students with marks above 80  
-- cse students below age 21  
-- average marks
+`query_engine.py` reads the question with a set of regex rules. It picks out the branch, any marks or age conditions, and whether you want a top/bottom list, an average or a count. Then it builds the SQL from those pieces. Numbers come straight from the regex match and branches from a fixed list, so user text never goes into the query directly.
 
-4. Query System Live Demo
+If it can't make sense of a question, it says so instead of guessing.
 
-Currently runs locally. Deployment coming soon.
+## Running it
 
-This project lets you interact with a database using simple English...
-
-5. How to run it
-
-1. Set up the database:
 ```bash
-python test_db.py
+pip install -r requirements.txt
+python app.py
+```
+
+Then open http://127.0.0.1:5000. The database file is created with sample data on the first run. To put the sample data back after changing it, run `python reset_db.py`.
+
+## Tests
+
+```bash
+python -m pytest
+```
+
+## Limitations
+
+It only knows the one `students` table and the phrasings above. Something like "students who did well" won't work. A possible next step is letting an LLM write the SQL from the table schema, with the rule-based parser kept as a fallback.
