@@ -1,4 +1,5 @@
 from db import init_db
 
-init_db()
-print("Database initialized with sample data.")
+# wipes the table and puts the sample students back
+init_db(reset=True)
+print("Database reset with sample data.")

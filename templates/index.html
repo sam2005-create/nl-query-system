@@ -96,8 +96,16 @@
 </div>
 
 <script>
+// escape text before putting it into the page
+function esc(value) {
+    const div = document.createElement("div");
+    div.textContent = value;
+    return div.innerHTML;
+}
+
 function sendQuery() {
     const query = document.getElementById("query").value;
+    const out = document.getElementById("output");
 
     fetch("/query", {
         method: "POST",
@@ -106,32 +114,40 @@ function sendQuery() {
     })
     .then(res => res.json())
     .then(data => {
-        let output = "";
-
         if (data.error) {
-            output = "<p style='color:red'>" + data.error + "</p>";
-        } else {
-            // SQL display
-            output += "<div class='sql-box'><b>SQL:</b> " + data.sql + "</div>";
-
-            // Table display
-            output += "<table>";
-            output += "<tr><th>ID</th><th>Name</th><th>Age</th><th>Branch</th><th>Marks</th></tr>";
-
-            data.result.forEach(row => {
-                output += "<tr>";
-                row.forEach(cell => {
-                    output += "<td>" + cell + "</td>";
-                });
-                output += "</tr>";
-            });
-
-            output += "</table>";
+            out.innerHTML = "<p style='color:#ff6b6b'>" + esc(data.error) + "</p>";
+            return;
         }
 
-        document.getElementById("output").innerHTML = output;
+        let html = "<div class='sql-box'><b>SQL:</b> " + esc(data.sql) + "</div>";
+
+        if (data.rows.length === 0) {
+            out.innerHTML = html + "<p>No students match that.</p>";
+            return;
+        }
+
+        // column names come from the query, so averages and counts show up properly too
+        html += "<table><tr>";
+        data.columns.forEach(col => { html += "<th>" + esc(col) + "</th>"; });
+        html += "</tr>";
+
+        data.rows.forEach(row => {
+            html += "<tr>";
+            row.forEach(cell => { html += "<td>" + esc(cell) + "</td>"; });
+            html += "</tr>";
+        });
+
+        out.innerHTML = html + "</table>";
+    })
+    .catch(() => {
+        out.innerHTML = "<p style='color:#ff6b6b'>Couldn't reach the server.</p>";
     });
 }
+
+// Enter key works the same as the button
+document.getElementById("query").addEventListener("keydown", e => {
+    if (e.key === "Enter") sendQuery();
+});
 </script>
 
 </body>

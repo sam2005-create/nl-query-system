@@ -1,40 +1,43 @@
+import sqlite3
+
 from flask import Flask, render_template, request, jsonify
+from db import init_db
 from query_engine import nl_to_sql, execute_sql
 
 app = Flask(__name__)
 
-# Home route → loads HTML page
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# API route → handles user query
 @app.route("/query", methods=["POST"])
 def query():
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
-    if not data or "query" not in data:
-        return jsonify({"error": "No query provided"})
+    if not data or not data.get("query", "").strip():
+        return jsonify({"error": "Type a question first."}), 400
 
     user_query = data["query"]
-
-    # Convert NL → SQL
     sql = nl_to_sql(user_query)
 
     if not sql:
-        return jsonify({"error": "Query not understood"})
+        return jsonify({"error": "Sorry, I couldn't understand that. Try something like 'cse students with marks above 80'."}), 400
 
-    # Execute SQL
-    result = execute_sql(sql)
+    try:
+        columns, rows = execute_sql(sql)
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {e}", "sql": sql}), 500
 
     return jsonify({
         "input": user_query,
         "sql": sql,
-        "result": result
+        "columns": columns,
+        "rows": rows
     })
 
 
-# Run server
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
